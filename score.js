@@ -1,5 +1,4 @@
-let API_KEY =
-	"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"; // Replace with your OpenRouter API key
+let API_KEY = "";
 const URL = "https://openrouter.ai/api/v1/chat/completions";
 let openrouterConnected = false;
 
