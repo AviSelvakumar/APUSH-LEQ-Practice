@@ -325,6 +325,13 @@
             border: 1px solid var(--border);
         }
     </style>
+    <!-- Cronitor RUM -->
+    <script async src="https://rum.cronitor.io/script.js"></script>
+    <script>
+        window.cronitor = window.cronitor || function () { (window.cronitor.q = window.cronitor.q || []).push(arguments); };
+        cronitor('config', { clientKey: 'bf8fd910f1e2d67861c86b82945ef385' });
+    </script>
+
 </head>
 
 <body>
@@ -362,7 +369,8 @@
             </div>
         </div>
         <div class="right-panel">
-            <div class="prompt" id="prompt">Evaluate the extent to which the ratification of the United States Constitution fostered
+            <div class="prompt" id="prompt">Evaluate the extent to which the ratification of the United States
+                Constitution fostered
                 change in the function of the federal government in the period of 1776 to 1800</div>
             <div class="right-panel-bottom">
                 <div class="editor-buttons">
@@ -405,11 +413,11 @@
         const underlineButton = document.getElementById('underline');
         const essayInput = document.getElementById('essay-input');
         const wordCount = document.getElementById('word-count');
-        
+
         import { Editor } from 'https://esm.sh/@tiptap/core'
         import StarterKit from 'https://esm.sh/@tiptap/starter-kit'
         import Underline from 'https://esm.sh/@tiptap/extension-underline'
-        
+
         const editor = new Editor({
             element: essayInput,
             extensions: [
@@ -420,32 +428,32 @@
                 // Update formatting buttons
                 if (editor.isActive('bold')) boldButton.classList.add('active')
                 else boldButton.classList.remove('active')
-                
+
                 if (editor.isActive('italic')) italicButton.classList.add('active')
                 else italicButton.classList.remove('active')
-                
+
                 if (editor.isActive('underline')) underlineButton.classList.add('active')
                 else underlineButton.classList.remove('active')
-                
+
                 // Update word count
                 const text = editor.getText();
                 const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
                 wordCount.textContent = `${words} words`;
             }
         })
-        
+
         boldButton.addEventListener('click', () => {
             editor.chain().focus().toggleBold().run()
         })
-        
+
         italicButton.addEventListener('click', () => {
             editor.chain().focus().toggleItalic().run()
         })
-        
+
         underlineButton.addEventListener('click', () => {
             editor.chain().focus().toggleUnderline().run()
         })
-        
+
         // Close popup when sign in is clicked (just for demo)
         document.getElementById('signin').addEventListener('click', () => {
             document.getElementById('popup').style.display = 'none';
