@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AP History Essay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-primary: #18181b;
+            --text-secondary: #52525b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border: #e5e7eb;
+            --border-focus: #a5b4fc;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--bg-secondary);
+            line-height: 1.5;
+        }
+
+        .main-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .left-panel {
+            width: 40%;
+            border-right: 1px solid var(--border);
+            padding: 24px;
+            overflow-y: auto;
+            background-color: var(--bg-secondary);
+            border-top-left-radius: var(--radius);
+            border-bottom-left-radius: var(--radius);
+        }
+
+        .instructions h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .instructions {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+            margin-top: 16px;
+        }
+
+        .instructions li {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .right-panel {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            border-top-right-radius: var(--radius);
+            border-bottom-right-radius: var(--radius);
+            background-color: var(--bg-primary);
+        }
+
+        .right-panel-bottom {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            height: 100%;
+        }
+
+        .editor-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--bg-primary);
+            border-top-right-radius: var(--radius);
+        }
+
+        .format-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .format-btn:hover {
+            background-color: #f3f4f6;
+        }
+
+        .format-btn.active {
+            background-color: #e0e7ff;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        #essay-input {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            padding-bottom: 10%;
+            border: none;
+            resize: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            outline: none;
+            overflow-y: auto;
+            color: var(--text-primary);
+        }
+
+        .utility-container {
+            justify-content: flex-end;
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .select-container {
+            position: relative;
+        }
+
+        .custom-select {
+            appearance: none;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 36px 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .custom-select:hover {
+            border-color: #d1d5db;
+        }
+
+        .custom-select:focus {
+            border-color: var(--border-focus);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(165, 180, 252, 0.3);
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--text-secondary);
+        }
+
+        .button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .button:hover {
+            background-color: #f3f4f6;
+        }
+
+        .button-primary {
+            background-color: var(--primary);
+            color: white;
+            border: 1px solid var(--primary);
+        }
+
+        .button-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .prompt {
+            width: 100%;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 16px;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            background-color: #f9fafb;
+            font-weight: 500;
+        }
+
+        .tiptap {
+            height: 100%;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .popup-content {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .signin-button {
+            background-color: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            margin: 24px 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .signin-button:hover {
+            background-color: #f9f9f9;
+            box-shadow: var(--shadow-md);
+        }
+
+        .signin-button:active {
+            transform: translateY(1px);
+        }
+
+        .logo {
+            width: 20px;
+            height: 20px;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .popup-text {
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .popup-subtext {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .word-count {
+            position: absolute;
+            bottom: 12px;
+            right: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="popup" id="popup">
+            <div class="popup-content">
+                <h2 class="popup-title">Sign in to Openrouter</h2>
+                <p class="popup-text">AI Scoring requires you to connect an Openrouter account.</p>
+                <p class="popup-subtext">The app will not use any credits</p>
+                <button class="signin-button" id="signin">
+                    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" xml:space="preserve">
+                        <path fill="none"
+                            d="M343 513H1.042V1.104h511.791V513zm67.458-362.943-87.324-50.383v30.26c-14.318 0-27.958-.529-41.541.12-21.842 1.044-42.526 7.005-62.333 16.275-20.383 9.54-37.882 23.48-56.176 36.213-20.123 14.006-40.27 27.99-64.414 34.387-11.35 3.008-22.831 5.524-34.245 8.261v64.21c22.91 4.33 45.215 9.229 64.936 21.483 14.128 8.779 27.98 18.04 41.593 27.6 18.004 12.642 35.853 25.4 56.523 33.575 24.544 9.707 50.084 13.102 76.273 12.875 5.605-.049 11.21-.007 17.608-.007v28.985l111.612-64.462-111.88-64.61v34.168c-11.67 0-22.634.186-33.59-.042-18.367-.382-35.642-5.178-51.056-15.129-15.513-10.014-30.427-20.953-45.66-31.406-7.34-5.037-14.807-9.888-21.87-14.592 19.39-13.51 38.668-26.878 57.875-40.348 14.317-10.042 29.398-18.961 47.011-20.726 15.992-1.602 32.198-1.067 48.31-1.443.243-.005.497.405 1.29 1.094v32.45l111.785-64.51a8069 8069 0 0 1-24.727-14.298" />
+                        <path fill="currentcolor"
+                            d="M410.766 150.254c8.073 4.675 15.838 9.153 24.419 14.1-37.385 21.576-74.117 42.773-111.785 64.511v-32.45c-.793-.689-1.047-1.1-1.29-1.094-16.112.376-32.318-.159-48.31 1.443-17.613 1.765-32.694 10.684-47.011 20.726-19.207 13.47-38.486 26.838-57.875 40.348 7.063 4.704 14.53 9.555 21.87 14.592 15.233 10.453 30.147 21.392 45.66 31.406 15.414 9.951 32.69 14.747 51.055 15.129 10.957.228 21.922.042 33.591.042v-34.168l111.88 64.61-111.612 64.462v-28.985c-6.398 0-12.003-.042-17.608.007-26.189.227-51.73-3.168-76.273-12.875-20.67-8.174-38.52-20.933-56.523-33.575-13.614-9.56-27.465-18.821-41.593-27.6-19.72-12.254-42.026-17.153-64.936-21.483v-64.21c11.414-2.737 22.895-5.253 34.245-8.26 24.144-6.399 44.29-20.382 64.414-34.388 18.294-12.733 35.793-26.674 56.176-36.213 19.807-9.27 40.49-15.23 62.333-16.275 13.583-.649 27.223-.12 41.541-.12v-30.26c29.752 17.166 58.538 33.774 87.632 50.58" />
+                    </svg>
+                    Sign In with Openrouter
+                </button>
+            </div>
+        </div>
+        <div class="left-panel">
+            <div class="instructions">
+                <h3>In your response you should do the following:</h3>
+                <ul>
+                    <li>Respond to the prompt with a historically defensible thesis or claim that establishes a line of
+                        reasoning.</li>
+                    <li>Describe a broader historical context relevant to the prompt.</li>
+                    <li>Support an argument in response to the prompt using at least two pieces of specific and relevant
+                        evidence.</li>
+                    <li>Use historical reasoning (e.g., comparison, causation, continuity or change) to frame or
+                        structure an argument that addresses the prompt.</li>
+                    <li>Demonstrate a complex understanding of a historical development related to the prompt through
+                        sophisticated argumentation and/or effective use of evidence.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="prompt" id="prompt">Evaluate the extent to which the ratification of the United States Constitution fostered
+                change in the function of the federal government in the period of 1776 to 1800</div>
+            <div class="right-panel-bottom">
+                <div class="editor-buttons">
+                    <button class="format-btn" id="bold"><i class="fas fa-bold"></i></button>
+                    <button class="format-btn" id="italic"><i class="fas fa-italic"></i></button>
+                    <button class="format-btn" id="underline"><i class="fas fa-underline"></i></button>
+                    <div class="utility-container">
+                        <div class="select-container">
+                            <select name="exam" class="custom-select" id="prompt-select">
+                                <option value="random">Random Period</option>
+                                <option value="Period 2: 1607 - 1754">Period 2: 1607 - 1754</option>
+                                <option value="Period 3: 1754 - 1800">Period 3: 1754 - 1800</option>
+                                <option value="Period 4: 1800 - 1848">Period 4: 1800 - 1848</option>
+                                <option value="Period 5: 1844 - 1877">Period 5: 1844 - 1877</option>
+                                <option value="Period 6: 1865 - 1898">Period 6: 1865 - 1898</option>
+                                <option value="Period 7: 1890 - 1945">Period 7: 1890 - 1945</option>
+                                <option value="Period 8: 1945 - 1980">Period 8: 1945 - 1980</option>
+                            </select>
+                            <div class="select-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <button class="button" id="genPrompt">
+                            <i class="fas fa-file"></i> New Prompt
+                        </button>
+                        <button class="button button-primary" id="submit">
+                            <i class="fas fa-paper-plane"></i> Submit
+                        </button>
+                    </div>
+                </div>
+                <div id="essay-input" class="tiptap"></div>
+                <div class="word-count" id="word-count">0 words</div>
+            </div>
+        </div>
+    </div>
+    <script src="score.js"></script>
+    <script type="module">
+        const boldButton = document.getElementById('bold');
+        const italicButton = document.getElementById('italic');
+        const underlineButton = document.getElementById('underline');
+        const essayInput = document.getElementById('essay-input');
+        const wordCount = document.getElementById('word-count');
+        
+        import { Editor } from 'https://esm.sh/@tiptap/core'
+        import StarterKit from 'https://esm.sh/@tiptap/starter-kit'
+        import Underline from 'https://esm.sh/@tiptap/extension-underline'
+        
+        const editor = new Editor({
+            element: essayInput,
+            extensions: [
+                StarterKit,
+                Underline
+            ],
+            onTransaction({ editor }) {
+                // Update formatting buttons
+                if (editor.isActive('bold')) boldButton.classList.add('active')
+                else boldButton.classList.remove('active')
+                
+                if (editor.isActive('italic')) italicButton.classList.add('active')
+                else italicButton.classList.remove('active')
+                
+                if (editor.isActive('underline')) underlineButton.classList.add('active')
+                else underlineButton.classList.remove('active')
+                
+                // Update word count
+                const text = editor.getText();
+                const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+                wordCount.textContent = `${words} words`;
+            }
+        })
+        
+        boldButton.addEventListener('click', () => {
+            editor.chain().focus().toggleBold().run()
+        })
+        
+        italicButton.addEventListener('click', () => {
+            editor.chain().focus().toggleItalic().run()
+        })
+        
+        underlineButton.addEventListener('click', () => {
+            editor.chain().focus().toggleUnderline().run()
+        })
+        
+        // Close popup when sign in is clicked (just for demo)
+        document.getElementById('signin').addEventListener('click', () => {
+            document.getElementById('popup').style.display = 'none';
+        })
+    </script>
+</body>
+
+</html>
