@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Flashcard Generator</title>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --text-primary: #18181b;
+      --text-secondary: #52525b;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --border: #e5e7eb;
+      --border-focus: #a5b4fc;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --radius: 8px;
+      --transition: all 0.2s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .app-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      overflow: hidden;
+    }
+    
+    .input-panel {
+      padding: 24px;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    .preview-panel {
+      padding: 24px;
+      background-color: #f9fafb;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    
+    h2 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .input-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    
+    textarea, input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    textarea:focus, input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+    
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    
+    .option-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .option-pill:hover, .option-pill.active {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .option-pill svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn:hover {
+      background-color: var(--primary-hover);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-secondary {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background-color: #f3f4f6;
+    }
+    
+    .flashcard {
+      position: relative;
+      width: 100%;
+      height: 260px;
+      perspective: 1000px;
+      margin-bottom: 20px;
+    }
+    
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .flashcard:hover .flashcard-inner {
+      transform: rotateX(180deg);
+    }
+    
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .flashcard-front {
+      background-color: white;
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 18px;
+    }
+    
+    .flashcard-back {
+      background-color: var(--primary);
+      color: white;
+      transform: rotateX(180deg);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    
+    .card-controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    
+    .card-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-weight: 500;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    
+    .card-indicator svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .edit-panel {
+      background-color: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    @media (max-width: 800px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+      }
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .popup-content {
+      display: flex;
+      flex-direction: column;
+      background-color: white;
+      padding: 32px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .signin-button {
+      background-color: white;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      margin: 24px 0;
+      font-family: 'Inter', sans-serif;
+      text-decoration: none;
+    }
+
+    .signin-button:hover {
+      background-color: #f9f9f9;
+      box-shadow: var(--shadow-md);
+    }
+
+    .signin-button:active {
+      transform: translateY(1px);
+    }
+
+    .logo {
+      width: 20px;
+      height: 20px;
+    }
+
+    .popup-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    .popup-text {
+      color: var(--text-primary);
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .popup-subtext {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .auth-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      color: inherit;
+      transition: var(--transition);
+    }
+
+    .user-info:hover {
+      background: var(--bg-secondary);
+    }
+
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .auth-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .auth-button:hover {
+      background: var(--bg-secondary);
+    }
+
+    .auth-button.signout {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+
+    .auth-button.signout:hover {
+      background: #fecaca;
+    }
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+
+<body>
+  <div class="auth-container" id="authContainer">
+    <button class="auth-button" onclick="signInWithGoogle()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Sign In
+    </button>
+  </div>
+
+  <div class="popup" id="popup">
+    <div class="popup-content">
+      <h2 class="popup-title">Sign in to Openrouter</h2>
+      <p class="popup-text">AI Flashcards requires you to connect an Openrouter account.</p>
+      <p class="popup-subtext">The app will not use any credits</p>
+      <button class="signin-button" id="signin">
+        <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" xml:space="preserve">
+          <path fill="none" d="M343 513H1.042V1.104h511.791V513zm67.458-362.943-87.324-50.383v30.26c-14.318 0-27.958-.529-41.541.12-21.842 1.044-42.526 7.005-62.333 16.275-20.383 9.54-37.882 23.48-56.176 36.213-20.123 14.006-40.27 27.99-64.414 34.387-11.35 3.008-22.831 5.524-34.245 8.261v64.21c22.91 4.33 45.215 9.229 64.936 21.483 14.128 8.779 27.98 18.04 41.593 27.6 18.004 12.642 35.853 25.4 56.523 33.575 24.544 9.707 50.084 13.102 76.273 12.875 5.605-.049 11.21-.007 17.608-.007v28.985l111.612-64.462-111.88-64.61v34.168c-11.67 0-22.634.186-33.59-.042-18.367-.382-35.642-5.178-51.056-15.129-15.513-10.014-30.427-20.953-45.66-31.406-7.34-5.037-14.807-9.888-21.87-14.592 19.39-13.51 38.668-26.878 57.875-40.348 14.317-10.042 29.398-18.961 47.011-20.726 15.992-1.602 32.198-1.067 48.31-1.443.243-.005.497.405 1.29 1.094v32.45l111.785-64.51a8069 8069 0 0 1-24.727-14.298"/>
+          <path fill="currentcolor" d="M410.766 150.254c8.073 4.675 15.838 9.153 24.419 14.1-37.385 21.576-74.117 42.773-111.785 64.511v-32.45c-.793-.689-1.047-1.1-1.29-1.094-16.112.376-32.318-.159-48.31 1.443-17.613 1.765-32.694 10.684-47.011 20.726-19.207 13.47-38.486 26.838-57.875 40.348 7.063 4.704 14.53 9.555 21.87 14.592 15.233 10.453 30.147 21.392 45.66 31.406 15.414 9.951 32.69 14.747 51.055 15.129 10.957.228 21.922.042 33.591.042v-34.168l111.88 64.61-111.612 64.462v-28.985c-6.398 0-12.003-.042-17.608.007-26.189.227-51.73-3.168-76.273-12.875-20.67-8.174-38.52-20.933-56.523-33.575-13.614-9.56-27.465-18.821-41.593-27.6-19.72-12.254-42.026-17.153-64.936-21.483v-64.21c11.414-2.737 22.895-5.253 34.245-8.26 24.144-6.399 44.29-20.382 64.414-34.388 18.294-12.733 35.793-26.674 56.176-36.213 19.807-9.27 40.49-15.23 62.333-16.275 13.583-.649 27.223-.12 41.541-.12v-30.26c29.752 17.166 58.538 33.774 87.632 50.58"/>
+        </svg>
+        Sign In with Openrouter
+      </button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Input Panel -->
+    <div class="input-panel">
+      <h2>Generate AI Flashcards</h2>
+      
+      <div class="input-group">
+        <label for="content">Study Material</label>
+        <textarea id="content" placeholder="Paste your study material, notes, or content to learn..."></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label>Learning Format</label>
+        <div class="options">
+          <div class="option-pill active">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+            </svg>
+            Key Concepts
+          </div>
+          <div class="option-pill">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18h6"></path>
+              <path d="M10 22h4"></path>
+              <path d="M12 2v7"></path>
+              <path d="M18.42 12a6 6 0 1 1-6.47-9.3"></path>
+            </svg>
+            Definitions
+          </div>
+          <div class="option-pill">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Q&A Format
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="card-count">Number of Cards</label>
+        <select id="card-count">
+          <option value="10">10 cards</option>
+          <option value="20" selected>20 cards</option>
+          <option value="30">30 cards</option>
+          <option value="50">50 cards</option>
+        </select>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn" id="generate-flashcards">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Generate Flashcards
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='study.html'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20V10M18 20V4M6 20v-4"/>
+          </svg>
+          Study Mode
+        </button>
+      </div>
+    </div>
+    
+    <!-- Preview Panel -->
+    <div class="preview-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2>Card Preview</h2>
+        <div class="card-indicator">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+            <line x1="6" y1="10" x2="6.01" y2="10"></line>
+            <line x1="6" y1="14" x2="6.01" y2="14"></line>
+          </svg>
+          Card 1 of 3
+        </div>
+      </div>
+      
+      <div class="flashcard">
+        <div class="flashcard-inner">
+          <div class="flashcard-front">
+            What is the primary difference between supervised and unsupervised machine learning?
+          </div>
+          <div class="flashcard-back">
+            Supervised learning uses labeled data for training, while unsupervised learning works with unlabeled data to find patterns without explicit guidance.
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-controls">
+        <button class="btn btn-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Previous
+        </button>
+        <button class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+          Next
+        </button>
+      </div>
+      
+      <div class="edit-panel">
+        <div class="input-group" style="margin-bottom: 12px;">
+          <label for="edit-front">Edit Front</label>
+          <textarea id="edit-front" rows="3">What is the primary difference between supervised and unsupervised machine learning?</textarea>
+        </div>
+        <div class="input-group" style="margin-bottom: 12px;">
+          <label for="edit-content">Edit Back</label>
+          <textarea id="edit-content" rows="3">Supervised learning uses labeled data for training, while unsupervised learning works with unlabeled data to find patterns without explicit guidance.</textarea>
+        </div>
+        <div class="edit-actions">
+          <button class="btn btn-secondary">Reset</button>
+          <button class="btn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="flashcard.js"></script>
+</body>
+</html>

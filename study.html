@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Flashcards</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --text-primary: #18181b;
+      --text-secondary: #52525b;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --border: #e5e7eb;
+      --border-focus: #a5b4fc;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --radius: 8px;
+      --transition: all 0.2s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .study-container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: var(--border);
+      border-radius: 4px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .flashcard {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      perspective: 1000px;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+    }
+
+    .flashcard.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      border-radius: var(--radius);
+      font-size: 20px;
+      line-height: 1.6;
+    }
+
+    .flashcard-front {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .flashcard-back {
+      background-color: var(--primary);
+      color: white;
+      transform: rotateY(180deg);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .confidence-controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    .flashcard.flipped + .controls + .confidence-controls {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .confidence-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+
+    .confidence-btn.learning {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .confidence-btn.learning:hover {
+      background-color: #fecaca;
+    }
+
+    .confidence-btn.almost {
+      background-color: #fef9c3;
+      color: #854d0e;
+      border-color: #fef08a;
+    }
+
+    .confidence-btn.almost:hover {
+      background-color: #fef08a;
+    }
+
+    .confidence-btn.know {
+      background-color: #dcfce7;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .confidence-btn.know:hover {
+      background-color: #bbf7d0;
+    }
+
+    .confidence-indicator {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-primary);
+    }
+
+    .confidence-indicator.learning {
+      background-color: #ef4444;
+    }
+
+    .confidence-indicator.almost {
+      background-color: #eab308;
+    }
+
+    .confidence-indicator.know {
+      background-color: #22c55e;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 16px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .study-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .load-section {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state h2 {
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+
+    .empty-state p {
+      margin-bottom: 24px;
+    }
+
+    .summary-view {
+      background-color: var(--bg-primary);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      display: none;
+    }
+
+    .summary-view h2 {
+      color: var(--text-primary);
+      font-size: 24px;
+      margin-bottom: 24px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background-color: var(--bg-secondary);
+      padding: 16px;
+      border-radius: var(--radius);
+      text-align: center;
+    }
+
+    .stat-card.know {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .stat-card.almost {
+      background-color: #fef9c3;
+      color: #854d0e;
+    }
+
+    .stat-card.learning {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .summary-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .summary-message {
+      color: var(--text-secondary);
+      margin: 24px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .auth-container {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      color: inherit;
+      transition: var(--transition);
+    }
+
+    .user-info:hover {
+      background: var(--bg-secondary);
+    }
+
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .auth-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .auth-button:hover {
+      background: var(--bg-secondary);
+    }
+
+    .auth-button.signout {
+      background: #fee2e2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+
+    .auth-button.signout:hover {
+      background: #fecaca;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container" id="authContainer">
+    <button class="auth-button" id="signInButton">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+        <polyline points="10 17 15 12 10 7"/>
+        <line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Sign In
+    </button>
+  </div>
+
+  <div class="study-container">
+    <div class="header">
+      <h1>Study Flashcards</h1>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-secondary" onclick="editCurrentSet()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" style="width: 0%"></div>
+    </div>
+
+    <div class="study-info">
+      <span id="cardCount">Card 0 of 0</span>
+      <span id="studyProgress">0% Complete</span>
+    </div>
+
+    <div id="studyContent">
+      <div id="emptyState" class="empty-state">
+        <h2>No Flashcards Loaded</h2>
+        <p>Load your flashcards to begin studying</p>
+        <button class="btn" id="loadButton">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Load Flashcards
+        </button>
+      </div>
+
+      <div id="flashcardView" style="display: none;">
+        <!-- Flashcard content will be inserted here by JavaScript -->
+      </div>
+
+      <div id="summaryView" class="summary-view" style="display: none;">
+        <h2>Study Session Complete! 🎉</h2>
+        <div class="summary-stats">
+          <div class="stat-card know">
+            <div class="stat-number" id="knowCount">0</div>
+            <div class="stat-label">Know It!</div>
+          </div>
+          <div class="stat-card almost">
+            <div class="stat-number" id="almostCount">0</div>
+            <div class="stat-label">Almost Got It</div>
+          </div>
+          <div class="stat-card learning">
+            <div class="stat-number" id="learningCount">0</div>
+            <div class="stat-label">Still Learning</div>
+          </div>
+        </div>
+        <div class="summary-message" id="summaryMessage">
+          Great job! You've completed your study session.
+        </div>
+        <div class="summary-actions">
+          <button class="btn" onclick="restartSession()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+            </svg>
+            Study Again
+          </button>
+          <button class="btn btn-secondary" onclick="saveProgressToFirebase()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Save Progress
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="application/json">
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="study.js"></script>
+</body>
+</html> 
