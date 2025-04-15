@@ -126,13 +126,26 @@ async function saveProgressToFirebase() {
     }
 
     try {
+        // Determine which confidence levels to save
+        let confidenceLevelsToSave;
+        if (window.originalFlashcards) {
+            // We're in a filtered session, use the original confidence levels
+            confidenceLevelsToSave = window.originalConfidenceLevels;
+        } else {
+            // Regular session, use current confidence levels
+            confidenceLevelsToSave = confidenceLevels;
+        }
+        
+        // Convert studiedCards Set to array for Firebase
+        const studiedCardsArray = Array.from(studiedCards);
+        
         // Save progress
         const progressRef = db.collection('users').doc(currentUser.uid)
             .collection('progress').doc(currentSetId || 'default');
         
         await progressRef.set({
-            confidenceLevels,
-            studiedCards: Array.from(studiedCards),
+            confidenceLevels: confidenceLevelsToSave,
+            studiedCards: studiedCardsArray,
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -141,7 +154,7 @@ async function saveProgressToFirebase() {
             const setRef = await db.collection('users').doc(currentUser.uid)
                 .collection('flashcardSets').add({
                     name: prompt('Enter a name for this flashcard set:') || 'Untitled Set',
-                    cards: flashcards,
+                    cards: window.originalFlashcards || flashcards,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             currentSetId = setRef.id;
@@ -149,8 +162,8 @@ async function saveProgressToFirebase() {
 
         console.log('Progress saved successfully:', {
             setId: currentSetId,
-            confidenceLevels,
-            studiedCards: Array.from(studiedCards)
+            confidenceLevels: confidenceLevelsToSave,
+            studiedCards: studiedCardsArray
         });
     } catch (error) {
         console.error('Error saving progress:', error);
@@ -342,28 +355,36 @@ async function loadFlashcardSet(setId) {
             window.originalFlashcards = [...flashcards];
             window.originalConfidenceLevels = {...confidenceLevels};
 
-            // Filter out mastered cards
-            const unmasteredCards = filterUnmasteredCards();
-            flashcards = unmasteredCards;
+            // Check if mastery is 100%
+            const totalCards = window.originalFlashcards.length;
+            const masteredCards = Object.values(window.originalConfidenceLevels).filter(level => level === 'know').length;
+            const masteryPercentage = (masteredCards / totalCards) * 100;
 
-            // Create new confidence levels object for filtered cards
-            const newConfidenceLevels = {};
-            const unmasteredIndices = [];
-            window.originalFlashcards.forEach((card, index) => {
-                if (window.originalConfidenceLevels[index] !== 'know') {
-                    unmasteredIndices.push(index);
-                }
-            });
+            // Only filter cards if mastery is not 100%
+            if (masteryPercentage < 100) {
+                // Filter out mastered cards
+                const unmasteredCards = filterUnmasteredCards();
+                flashcards = unmasteredCards;
 
-            unmasteredCards.forEach((card, newIndex) => {
-                const oldIndex = unmasteredIndices[newIndex];
-                if (window.originalConfidenceLevels[oldIndex]) {
-                    newConfidenceLevels[newIndex] = window.originalConfidenceLevels[oldIndex];
-                }
-            });
+                // Create new confidence levels object for filtered cards
+                const newConfidenceLevels = {};
+                const unmasteredIndices = [];
+                window.originalFlashcards.forEach((card, index) => {
+                    if (window.originalConfidenceLevels[index] !== 'know') {
+                        unmasteredIndices.push(index);
+                    }
+                });
 
-            confidenceLevels = newConfidenceLevels;
-            studiedCards = new Set();
+                unmasteredCards.forEach((card, newIndex) => {
+                    const oldIndex = unmasteredIndices[newIndex];
+                    if (window.originalConfidenceLevels[oldIndex]) {
+                        newConfidenceLevels[newIndex] = window.originalConfidenceLevels[oldIndex];
+                    }
+                });
+
+                confidenceLevels = newConfidenceLevels;
+                studiedCards = new Set();
+            }
 
             showFlashcardView();
             updateCardDisplay();
@@ -426,6 +447,7 @@ function createFlashcardElement() {
     flashcard.addEventListener('click', () => {
         flashcard.classList.toggle('flipped');
     });
+
 
     confidenceButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -638,14 +660,17 @@ function continueStudying() {
     const newConfidenceLevels = {};
     unmasteredCards.forEach((card, newIndex) => {
         const oldIndex = unmasteredIndices[newIndex];
-        if (confidenceLevels[oldIndex]) {
-            newConfidenceLevels[newIndex] = confidenceLevels[oldIndex];
+        if (window.originalConfidenceLevels[oldIndex]) {
+            newConfidenceLevels[newIndex] = window.originalConfidenceLevels[oldIndex];
         }
     });
     
     // Reset study progress for this filtered set
     studiedCards = new Set();
     confidenceLevels = newConfidenceLevels;
+
+    // Save the updated state to Firebase
+    saveProgressToFirebase();
 
     // Show flashcard view and update display
     showFlashcardView();
@@ -687,7 +712,7 @@ function updateProgress() {
 
     // Only show summary if we've studied all cards in the current deck
     // AND the current card has been rated
-    if (progress === 100 && allCardsRated()) {
+    if (progress === 100) {
         // If we're in a filtered session, make sure to record the last card's confidence
         if (window.originalFlashcards) {
             // Map the current index back to the original deck
@@ -699,8 +724,7 @@ function updateProgress() {
             }
         }
         
-        // Check if all cards have been rated before showing summary
-        if (allCardsRated()) {
+        if (progress === 100) {
             showSummary();
         }
     }
@@ -715,7 +739,32 @@ function calculateConfidenceStats() {
 }
 
 function setConfidence(confidence) {
+    if (!currentUser) {
+        alert('Please sign in to track your progress');
+        return;
+    }
+
+    // Update local confidence levels
     confidenceLevels[currentIndex] = confidence;
+    
+    // If we're in a filtered session, update the original confidence levels
+    if (window.originalFlashcards) {
+        // Find the corresponding index in the original deck
+        const originalIndex = window.originalFlashcards.findIndex((card, index) => {
+            return !window.originalConfidenceLevels[index] || window.originalConfidenceLevels[index] !== 'know';
+        });
+        if (originalIndex !== -1) {
+            window.originalConfidenceLevels[originalIndex] = confidence;
+        }
+    }
+
+    // Add to studied cards
+    studiedCards.add(currentIndex);
+
+    // Save to Firebase
+    saveProgressToFirebase();
+
+    // Update UI
     updateCardDisplay();
 }
 
@@ -730,47 +779,6 @@ function showNextCard() {
     if (currentIndex < flashcards.length - 1) {
         currentIndex++;
         updateCardDisplay();
-    }
-}
-
-async function updateConfidenceLevel(level) {
-    if (!currentUser) {
-        alert('Please sign in to track your progress');
-        return;
-    }
-
-    const currentCard = flashcards[currentIndex];
-    const progressRef = db.collection('users').doc(currentUser.uid)
-        .collection('progress').doc(currentSetId);
-
-    try {
-        const progressDoc = await progressRef.get();
-        let progress = { 
-            confidenceLevels: {},
-            studiedCards: [],
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        if (progressDoc.exists) {
-            progress = progressDoc.data();
-        }
-
-        // Update confidence level for current card
-        progress.confidenceLevels[currentIndex] = level;
-        
-        // Add to studied cards if not already there
-        if (!progress.studiedCards.includes(currentIndex)) {
-            progress.studiedCards.push(currentIndex);
-        }
-
-        // Save progress
-        await progressRef.set(progress);
-
-        // Update UI
-        updateCardDisplay();
-    } catch (error) {
-        console.error('Error updating progress:', error);
-        alert('Failed to update progress. Please try again.');
     }
 }
 

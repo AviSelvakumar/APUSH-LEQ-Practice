@@ -4,21 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flashcard Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
     <header>
-        <h1>My Flashcard Sets</h1>
+        <h1>Flashcard Dashboard</h1>
         <div class="auth-container" id="authContainer">
             <!-- Auth UI will be dynamically inserted here -->
         </div>
     </header>
 
     <main>
+        <div class="main-header">
+            <h2>Your Sets</h2>
+            <button class="btn" onclick="window.location.href='flashcard.html'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Create New Set
+            </button>
+        </div>
+
         <div id="emptyState" class="empty-state">
             <h2>No Flashcard Sets</h2>
             <p>Create your first flashcard set to get started!</p>
-            <button class="btn btn-primary" onclick="window.location.href='flashcard.html'">
+            <button class="btn" onclick="window.location.href='flashcard.html'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
