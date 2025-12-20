@@ -1,6 +1,13 @@
-let API_KEY = "";
-const URL = "https://openrouter.ai/api/v1/chat/completions";
-let openrouterConnected = false;
+let API_KEY = "sk-hc-v1-a385a7d193c248c8a403fbbc7cd5b687925ff28a349a4d03b553adc51343f54f";
+const URL = "https://service.plsdontblockthisdomain.workers.dev/";
+const MODEL = "openai/gpt-5.1"
+let openrouterConnected = true;
+let rubric;
+fetch("leq_rubric.json")
+  .then(response => response.json())
+  .then(data => {
+    rubric = data;
+  });
 
 document.getElementById("signin").addEventListener("click", () => {
 	window.location.href = `https://openrouter.ai/auth?callback_url=${window.location.href}`;
@@ -32,6 +39,7 @@ async function getOpenRouterKey() {
 	return key;
 }
 
+/*
 document.addEventListener("DOMContentLoaded", async () => {
 	const urlParams = new URLSearchParams(window.location.search);
 	const code = urlParams.get("code");
@@ -55,16 +63,52 @@ document.addEventListener("DOMContentLoaded", async () => {
 		}
 	}
 });
+*/
+
+document.getElementById("popup").style.display = "none";
+
+function buildPrompt() {
+	let lines = [];
+	lines.push(`Total points possible: ${rubric.total_points}.`);
+	lines.push(`
+	General Scoring Notes
+		• Except where otherwise noted, each point of these rubrics is earned independently; for example, a student could earn a point for evidence
+		without earning a point for thesis/claim.
+		• Accuracy: The components of these rubrics require that students demonstrate historically defensible content knowledge. Given the timed nature
+		of the exam, essays may contain errors that do not detract from their overall quality, as long as the historical content used to advance the
+		argument is accurate.
+		• Clarity: Exam essays should be considered first drafts and thus may contain grammatical errors. Those errors will not be counted against a
+		student unless they obscure the successful demonstration of the content knowledge, skills, and practices described below. 
+`)
+  
+	rubric.categories.forEach(category => {
+	  lines.push(`Category: ${category.reporting_category} (${category.points} points)`);
+	  category.scoring_criteria.forEach(criteria => {
+		lines.push(`- Scoring criteria (${criteria.points} pt): ${criteria.text}`);
+	  });
+	  if (category.decision_rules) {
+		lines.push(`- Guidelines: ${category.decision_rules}`);
+	  }
+	  lines.push(""); // Blank line between categories
+	});
+  
+  
+	return lines.join("\n");
+}
 
 function queryGemini() {
 	return new Promise((resolve, reject) => {
 		const systemPrompt =
-			`You are an AP exam grader grading an LEQ response to the prompt '"${document.getElementById('prompt').textContent}"' based on the following rubric: A response receives a score of zero in the Thesis/Claim category if it does not meet the criteria for one point, and a score of one in the Thesis/Claim category if it responds to the prompt with a historically defensible thesis/claim that establishes a line of reasoning. A response receives a score of zero in the Contextualization category if it does not meet the criteria for one point, and a score of one in the Contextualization category if it describes a broader historical context relevant to the prompt. A response receives a score of zero in the Evidence category if it does not meet the criteria for one point, a score of one in the Evidence category if it provides specific examples of evidence relevant to the topic of the prompt, and a score of two in the Evidence category if it supports an argument in response to the prompt using specific and relevant examples of evidence. A response receives a score of zero in the Analysis and Reasoning category if it does not meet the criteria for one point, a score of one if it uses historical reasoning (e.g., comparison, causation, continuity, and change) to frame or structure an argument that addresses the prompt, and a score of two if it demonstrates a complex understanding of the historical development that is the focus of the prompt, using evidence to corroborate, qualify, or modify an argument that addresses the question.`;
+			`You are an expert AP exam grader grading an LEQ response to following prompt:
+			 '"${document.getElementById('prompt').textContent}"'. 
+			Grade the response based on the following rubric:
+			${buildPrompt()}
+			`;
 
 		const userPrompt = document.getElementById("essay-input").textContent;
 
 		const payload = {
-			model: "google/gemini-2.0-flash-exp:free", // Gemini Pro 2.0 Experimental (free)
+			model: MODEL, 
 			messages: [
 				{
 					role: "system",
@@ -84,14 +128,15 @@ function queryGemini() {
 						type: "object",
 						properties: {
 							score: {
-								type: "int",
+								type: "integer",
 								description:
 									"Total score the response recieved based on the rubric",
 							},
 						},
+						required: ["score"],
+						additionalProperties: false,
 					},
-					required: ["score"],
-					additionalProperties: false,
+
 				},
 			},
 			temperature: 0,

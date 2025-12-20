@@ -1,0 +1,59 @@
+{
+    "rubric_name": "AP History Long Essay Question (LEQ) Rubric",
+    "total_points": 6,
+    "categories": [
+      {
+        "reporting_category": "THESIS/CLAIM",
+        "points": "0–1",
+        "scoring_criteria": [
+          {
+            "points": 1,
+            "text": "Responds to the prompt with a historically defensible thesis/claim that establishes a line of reasoning."
+          }
+        ],
+        "decision_rules": "To earn this point, the thesis must make a claim that responds to the prompt, rather than merely restating or rephrasing the prompt. The thesis must consist of one or more sentences located in one place, either in the introduction or the conclusion."
+      },
+      {
+        "reporting_category": "CONTEXTUALIZATION",
+        "points": "0–1",
+        "scoring_criteria": [
+          {
+            "points": 1,
+            "text": "Describes a broader historical context relevant to the prompt."
+          }
+        ],
+        "decision_rules": "To earn this point, the response must relate the topic of the prompt to broader historical events, developments, or processes that occur before, during, or continue after the time frame of the question. This point is not awarded for merely a phrase or a reference."
+      },
+      {
+        "reporting_category": "EVIDENCE",
+        "points": "0–2",
+        "scoring_criteria": [
+          {
+            "points": 1,
+            "text": "Provides specific examples of evidence relevant to the topic of the prompt."
+          },
+          {
+            "points": 2,
+            "text": "Supports an argument in response to the prompt using specific and relevant examples of evidence."
+          }
+        ],
+        "decision_rules": "To earn one point, the response must identify specific historical examples of evidence relevant to the topic of the prompt. To earn two points the response must use specific historical evidence to support an argument in response to the prompt."
+      },
+      {
+        "reporting_category": "ANALYSIS & REASONING",
+        "points": "0–2",
+        "scoring_criteria": [
+          {
+            "points": 1,
+            "text": "Uses historical reasoning (e.g. comparison, causation, CCOT) to frame or structure an argument that addresses the prompt."
+          },
+          {
+            "points": 2,
+            "text": "Demonstrates a complex understanding of the historical development that is the focus of the prompt, using evidence to corroborate, qualify, or modify an argument that addresses the question."
+          }
+        ],
+        "decision_rules": "To earn the first point, the response must demonstrate the use of historical reasoning to frame or structure an argument, although the reasoning might be uneven or imbalanced. To earn the second point, the response must demonstrate a complex understanding. This can be accomplished in a variety of ways, such as:\n\n• Explaining nuance of an issue by analyzing multiple variables\n• Explaining both similarity and difference, or explaining both continuity and change, or explaining multiple causes, or explaining both causes and effects\n• Explaining relevant and insightful connections within and across periods\n• Confirming the validity of an argument by corroborating multiple perspectives across themes\n• Qualifying or modifying an argument by considering diverse or alternative views or evidence\n\nThis understanding must be part of the argument, not merely a phrase or reference."
+      }
+    ]
+  }
+  
