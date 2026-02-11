@@ -1,4 +1,4 @@
-let API_KEY = "sk-hc-v1-a385a7d193c248c8a403fbbc7cd5b687925ff28a349a4d03b553adc51343f54f";
+let API_KEY = "sk-hc-v1-30f1d55ebb0c44158bb67f50134fee65bb52a60169c248c4a004dfac70ac64d3";
 const URL = "https://service.plsdontblockthisdomain.workers.dev/";
 const MODEL = "openai/gpt-5.1"
 let openrouterConnected = true;
