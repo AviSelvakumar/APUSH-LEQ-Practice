@@ -1,4 +1,4 @@
-let API_KEY = "sk-hc-v1-cd7c183d0d2442b0ad25e2fc884beb16a1f304306aa74e3eb4eab2d666bf7846";
+let API_KEY = "not leaked lol";
 const URL = "https://service.plsdontblockthisdomain.workers.dev/";
 const MODEL = "openai/gpt-5.1"
 let openrouterConnected = true;
